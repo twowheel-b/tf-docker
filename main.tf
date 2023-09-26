@@ -1,3 +1,5 @@
+
+#kreuzwerker docker provider
 terraform {
   required_providers {
     docker = {
@@ -6,7 +8,7 @@ terraform {
     }
   }
 }
-
+# registry and local docker host config
 provider "docker" {
   host     = "ssh://twowheelb@docker.berrydale.home:22"
   ssh_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
@@ -17,12 +19,14 @@ provider "docker" {
   }
 }
 
+# create the private prometheus network
 resource "docker_network" "prometheus-network" {
   name = "prometheus-network"
   driver = "bridge"
   check_duplicate = true
 }
 
+# create the volume for prometheus to persist the db
 resource "docker_volume" "prometheus-data" {
   name = "prometheus-data"
 }
