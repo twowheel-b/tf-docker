@@ -10,22 +10,42 @@ terraform {
 provider "docker" {
   host     = "ssh://twowheelb@docker.berrydale.home:22"
   ssh_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
+
+  registry_auth {
+    address     = "registry-1.docker.io"
+    config_file = pathexpand("~/.docker/config.json")
+  }
 }
 
-# Creating a Docker Image ubuntu with the latest as the Tag.
-resource "docker_image" "ubuntu" {
-  name = "ubuntu"
+resource "docker_network" "prometheus-network" {
+  name = "prometheus-network"
+  driver = "bridge"
+  check_duplicate = true
 }
 
-# Creating a Docker Container using the latest ubuntu image.
-resource "docker_container" "webserver" {
-  image             = docker_image.ubuntu.latest
-  name              = "terraform-docker-test"
+resource "docker_volume" "prometheus-data" {
+  name = "prometheus-data"
+}
+
+# Creating a Docker Image for prometheus with the latest as the Tag.
+resource "docker_image" "prometheus" {
+  name = "bitnami/prometheus:latest"
+  force_remove = true
+}
+
+# Creating a Docker Container using the latest bitnami/prometheus image.
+resource "docker_container" "prometheus" {
+  image             = docker_image.prometheus.image_id
+  name              = "prometheus"
   must_run          = true
   publish_all_ports = true
-  command = [
-    "tail",
-    "-f",
-    "/dev/null"
-  ]
+
+  volumes {
+    container_path  = "/opt/bitnami/prometheus/data"
+    host_path = "/home/twowheelb/workspace/tf/docker/prometheus-data"
+    volume_name = "prometheus-data"
+  }
+  networks_advanced {
+    name            = docker_network.prometheus-network.id
+  }
 }
