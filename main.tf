@@ -10,13 +10,18 @@ terraform {
 }
 # registry and local docker host config
 provider "docker" {
-  host     = "ssh://twowheelb@docker.berrydale.home:22"
+  host     = var.docker_url
   ssh_opts = ["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null"]
 
   registry_auth {
     address     = "registry-1.docker.io"
     config_file = pathexpand("~/.docker/config.json")
   }
+}
+
+# define docker_url 
+variable docker_url {
+    type = string
 }
 
 # create the private prometheus network
